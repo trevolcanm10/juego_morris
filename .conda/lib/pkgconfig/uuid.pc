@@ -1,0 +1,11 @@
+prefix=/home/kali/Desktop/juego_morris/.conda
+exec_prefix=/home/kali/Desktop/juego_morris/.conda
+libdir=/home/kali/Desktop/juego_morris/.conda/lib
+includedir=/home/kali/Desktop/juego_morris/.conda/include
+
+Name: uuid
+Description: Universally unique id library
+Version: 2.38.1
+Requires:
+Cflags: -I${includedir}/uuid
+Libs: -L${libdir} -luuid
