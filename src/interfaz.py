@@ -27,21 +27,23 @@ class InterfazMorris:
             sys.exit()
 
     def _generar_puntos_ui(self):
-        """Coordenadas exactas para los 24 puntos del tablero."""
-        return [
-            # Anillo exterior (12 puntos)
-            (100, 100), (400, 100), (700, 100),  # Superior
-            (100, 400), (700, 400),              # Laterales
-            (100, 700), (400, 700), (700, 700),  # Inferior
-            # Anillo medio (8 puntos)
-            (200, 200), (400, 200), (600, 200),  # Superior
-            (200, 400), (600, 400),              # Laterales
-            (200, 600), (400, 600), (600, 600),  # Inferior
-            # Anillo interior (4 puntos)
-            (300, 300), (400, 300), (500, 300),  #Superior
-            (300, 400), (500, 400),              # Laterales
-            (300, 500), (400, 500), (500, 500)   # Inferior
-        ]
+        """Genera las coordenadas en píxeles para cada punto del tablero (usando coordenadas lógicas)."""
+        escala = 100
+        offset = 100  # margen para centrar el tablero
+
+        coordenadas_logicas = {
+            0: (0, 0),     1: (3, 0),     2: (6, 0),
+            3: (1, 1),     4: (3, 1),     5: (5, 1),
+            6: (2, 2),     7: (3, 2),     8: (4, 2),
+            9: (0, 3),    10: (1, 3),    11: (2, 3),
+            12: (4, 3),    13: (5, 3),    14: (6, 3),
+            15: (2, 4),    16: (3, 4),    17: (4, 4),
+            18: (1, 5),    19: (3, 5),    20: (5, 5),
+            21: (0, 6),    22: (3, 6),    23: (6, 6)
+        }
+
+        return [(x * escala + offset, y * escala + offset) for i in range(24) for x, y in [coordenadas_logicas[i]]]
+
 
     def dibujar_tablero(self):
         """Dibuja el tablero completo con líneas y puntos."""
@@ -71,13 +73,18 @@ class InterfazMorris:
         self.pantalla.blit(texto, (20, 20))
 
     def manejar_eventos(self):
+        #Registra eventos como clicks,teclas,cerrar ventana
         for evento in pygame.event.get():
+            #Usuario cierra la ventana
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            #Evento clickMouse    
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
+                #Colocación de fichas o movimientos
                 for i, (px, py) in enumerate(self.puntos_ui):
+                    #Areas de clickeo 50 x 50
                     if (px-25 <= x <= px+25) and (py-25 <= y <= py+25):
                         if self.en_modo_eliminacion:
                             if self.juego.eliminar_ficha(i):
@@ -92,7 +99,7 @@ class InterfazMorris:
                                     self.en_modo_eliminacion = True
                                     print("¡Molino formado! Selecciona una ficha del oponente para eliminar.")
                             else: #Fase de movimiento
-                                if self.juego.fichas_colocadas[1] < 6 or self.juego.fichas_colocadas[-1] < 6:
+                                if self.juego.fichas_jugador > 0 or self.juego.fichas_ia > 0:
                                     print("Ambos jugadores deben colocar sus 6 fichas antes de mover.")
                                     return
                                 if self.origen_seleccionado is None:

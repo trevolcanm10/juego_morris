@@ -14,17 +14,30 @@ class MorrisGame:
         self.movimientos_validos = self._generar_conexiones()  # Conexiones entre puntos
 
     def _generar_conexiones(self):
-        """Define las conexiones válidas entre puntos para movimientos (grafo del tablero)."""
-        return {
-            0: [1, 9], 1: [0, 2, 4], 2: [1, 14],  # Anillo exterior
-            3: [4, 10], 4: [1, 3, 5, 7], 5: [4, 13],  # Líneas centrales
-            6: [7, 11], 7: [4, 6, 8], 8: [7, 12],  # Anillo interior
-            9: [0, 10, 21], 10: [3, 9, 11, 18], 11: [6, 10, 15],
-            12: [8, 13, 17], 13: [5, 12, 14, 20], 14: [2, 13, 23],
-            15: [11, 16], 16: [15, 17, 19], 17: [12, 16],
-            18: [10, 19], 19: [16, 18, 20, 22], 20: [13, 19],
-            21: [9, 22], 22: [19, 21, 23], 23: [14, 22]
+        conexiones = {
+            0: [1, 9],1: [0, 2, 4],2: [1, 14],
+            3: [4, 10],4: [1, 3, 5, 7], 5: [4, 13],
+            6: [7, 11],7: [4, 6, 8],8: [7, 12],
+            9: [0, 10, 21], 10: [3, 9, 11, 18],11: [6, 10, 15],
+            12: [8, 13, 17],13: [5, 12, 14, 20],14: [2, 13, 23],
+            15: [11, 16],   16: [15, 17, 19],  17: [12, 16],
+            18: [10, 19],   19: [16, 18, 20, 22],20: [13, 19],
+            21: [9, 22],    22: [19, 21, 23],  23: [14, 22]
         }
+
+        # Asegurar bidireccionalidad (opcional, pero correcto)
+        conexiones_bidireccionales = {}
+        for origen, destinos in conexiones.items():
+            if origen not in conexiones_bidireccionales:
+                conexiones_bidireccionales[origen] = []
+            for destino in destinos:
+                conexiones_bidireccionales[origen].append(destino)
+                if destino not in conexiones_bidireccionales:
+                    conexiones_bidireccionales[destino] = []
+                if origen not in conexiones_bidireccionales[destino]:
+                    conexiones_bidireccionales[destino].append(origen)
+
+        return conexiones_bidireccionales
 
     
     def hacer_movimiento(self, origen, destino=None):
@@ -119,22 +132,15 @@ class MorrisGame:
     def _molinos_por_punto(self, punto):
         """Devuelve las posibles combinaciones de molino en las que participa el punto."""
         molinos = [
-            # Anillo exterior
-            [0, 1, 2], [3, 4, 5], [5, 6, 7],  # Horizontales
-            [0, 3, 5], [2, 4, 7], [1, 4, 6],  # Verticales
+            # Horizontales
+            [0, 1, 2],     [3, 4, 5],     [6, 7, 8],
+            [9, 10, 11],   [12, 13, 14], [15, 16, 17],
+            [18, 19, 20],  [21, 22, 23],
 
-            # Anillo medio
-            [8, 9, 10], [11, 12, 13], [13, 14, 15],
-            [8, 11, 13], [10, 12, 15], [9, 12, 14],
-
-            # Anillo interior
-            [16, 17, 18], [19, 20, 21], [21, 22, 23],
-            [16, 19, 21], [18, 20, 23], [17, 20, 22],
-
-            # Conexiones cruzadas entre anillos
-            [0, 8, 16], [1, 9, 17], [2, 10, 18],
-            [3, 11, 19], [4, 12, 20], [5, 13, 21],
-            [6, 14, 22], [7, 15, 23]
+            # Verticales
+            [0, 9, 21],    [3, 10, 18],   [6, 11, 15],
+            [1, 4, 7],     [16, 19, 22],
+            [8, 12, 17],   [5, 13, 20],   [2, 14, 23]
         ]
 
         return [m for m in molinos if punto in m]
