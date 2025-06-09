@@ -1,4 +1,3 @@
-from minimax import minimax
 import copy
 #Codifcación Denilson
 class MorrisGame:
@@ -139,10 +138,7 @@ class MorrisGame:
             [18, 19, 20],  [21, 22, 23],
 
             # Verticales
-            [0, 9, 21],    [3, 10, 18],    
-            
-            
-            [6, 11, 15],
+            [0, 9, 21],    [3, 10, 18],   [6, 11, 15],
             [1, 4, 7],     [16, 19, 22],
             [8, 12, 17],   [5, 13, 20],   [2, 14, 23]
         ]
@@ -151,9 +147,6 @@ class MorrisGame:
 
     def _cambiar_turno(self):
         self.turno_jugador *= -1
-        #cambio de turno IA
-        if self.turno_jugador == -1 and not self.fin_juego:
-            self.mover_ia()
 
     def estado_actual(self):
         return {
@@ -165,26 +158,3 @@ class MorrisGame:
             'fichas_en_tablero': self.fichas_en_tablero.copy(),
             'fin': self.fin_juego
         }
-
-
-    #Movimiento de la IA
-    def mover_ia(self):
-        if self.fin_juego:
-            return False
-        
-        if self.fase == "colocacion":
-            # IA coloca una ficha en el primer lugar vacío (puedes mejorar usando minimax aquí también)
-            for i in range(len(self.tablero)):
-                if self.tablero[i] == 0:
-                    self.hacer_movimiento(i)
-                    return True
-
-        elif self.fase == "movimiento":
-            # Usa minimax para decidir el movimiento
-            _, movimiento = minimax(self.tablero, 3, True, -float('inf'), float('inf'))
-            if movimiento:
-                origen, destino = movimiento
-                self.hacer_movimiento(origen, destino)
-                return True
-
-        return False
