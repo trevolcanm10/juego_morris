@@ -88,6 +88,7 @@ class InterfazMorris:
                     if (px-25 <= x <= px+25) and (py-25 <= y <= py+25):
                         if self.en_modo_eliminacion:
                             if self.juego.eliminar_ficha(i):
+                                self.juego._cambiar_turno()
                                 self.en_modo_eliminacion = False
                                 print("Ficha eliminada correctamente.")
                             else:
