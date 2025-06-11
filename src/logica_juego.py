@@ -41,7 +41,7 @@ class MorrisGame:
         return conexiones_bidireccionales
 
     
-    def hacer_movimiento(self, origen, destino=None):
+    def hacer_movimiento(self, origen, destino=None,simulado=False):
         if self.fin_juego:
             return False
 
@@ -65,8 +65,9 @@ class MorrisGame:
                 # Solo cambiar a fase de movimiento si ya no quedan fichas por colocar para ambos
                 if self.fichas_jugador == 0 and self.fichas_ia == 0:
                     self.fase = "movimiento"
-
-                self._cambiar_turno()
+                
+                if not simulado:
+                    self._cambiar_turno(simulado=simulado)
                 return True
 
         elif self.fase == "movimiento":
@@ -79,7 +80,7 @@ class MorrisGame:
                         if self._verificar_molino(destino):
                             return "eliminar"
                         
-                        self._cambiar_turno()
+                        self._cambiar_turno(simulado=simulado)
                         return True
         return False
 
@@ -149,11 +150,19 @@ class MorrisGame:
 
         return [m for m in molinos if punto in m]
 
-    def _cambiar_turno(self):
+    def _cambiar_turno(self, simulado=False):
         self.turno_jugador *= -1
-        #cambio de turno IA
-        if self.turno_jugador == -1 and not self.fin_juego:
-            self.mover_ia()
+        # turno de la IA
+        if self.turno_jugador == -1 and not self.fin_juego and not simulado:
+            _, mejor_mov = minimax(self, profundidad=3, maximizando=True)
+            if mejor_mov:
+                origen, destino = mejor_mov
+                resultado = self.hacer_movimiento(origen, destino)
+                if resultado == "eliminar":
+                    self.eliminar_ficha_contraria(-1)
+                       
+
+
 
     def estado_actual(self):
         return {
@@ -167,24 +176,60 @@ class MorrisGame:
         }
 
 
-    #Movimiento de la IA
-    def mover_ia(self):
+    def simular_movimiento(juego_original, origen, destino):
+        copia = copy.deepcopy(juego_original)
+        copia.hacer_movimiento(origen, destino, simulado=True)
+        return copia
+
+    def copiar_estado(self):
+        nuevo = MorrisGame()
+        nuevo.tablero = self.tablero[:]  # Copia del tablero
+        nuevo.turno_jugador = self.turno_jugador
+        nuevo.fichas_jugador = self.fichas_jugador
+        nuevo.fichas_ia = self.fichas_ia
+        nuevo.fichas_en_tablero = self.fichas_en_tablero.copy()
+        nuevo.fase = self.fase
+        nuevo.movimientos_validos = {k: v[:] for k, v in self.movimientos_validos.items()}
+        nuevo.fin_juego = self.fin_juego
+        return nuevo
+
+    def eliminar_ficha_contraria(self, jugador):
         if self.fin_juego:
-            return False
-        
-        if self.fase == "colocacion":
-            # IA coloca una ficha en el primer lugar vacío (puedes mejorar usando minimax aquí también)
-            for i in range(len(self.tablero)):
-                if self.tablero[i] == 0:
-                    self.hacer_movimiento(i)
-                    return True
+            return
 
-        elif self.fase == "movimiento":
-            # Usa minimax para decidir el movimiento
-            _, movimiento = minimax(self.tablero, 3, True, -float('inf'), float('inf'))
-            if movimiento:
-                origen, destino = movimiento
-                self.hacer_movimiento(origen, destino)
-                return True
+        # Encuentra las posiciones del oponente
+        rival = -jugador
+        posiciones_contrarias = [i for i, val in enumerate(self.tablero) if val == rival]
 
-        return False
+        # Intenta eliminar una que no esté en molino
+        ficha_a_eliminar = next(
+            (pos for pos in posiciones_contrarias if not self._es_molino(pos, rival)),
+            None
+        )
+
+        # Si todas están en molino, elimina cualquiera
+        if ficha_a_eliminar is None and posiciones_contrarias:
+            ficha_a_eliminar = posiciones_contrarias[0]
+
+        if ficha_a_eliminar is not None:
+            self.tablero[ficha_a_eliminar] = 0
+            self.fichas_en_tablero[rival] -= 1
+            print(f"Jugador {jugador} eliminó ficha del jugador {rival} en posición {ficha_a_eliminar}")
+
+            if self.fichas_en_tablero[rival] <= 2:
+                self.fin_juego = True
+                self.ganador = jugador
+                print(f"¡Jugador {jugador} gana! El jugador {rival} tiene solo 2 fichas.")
+                return
+        # Solo cambiar el turno si el juego no terminó
+        if not self.fin_juego:
+            self.turno_jugador *= -1
+
+            # Si el nuevo turno es de la IA, la IA debe jugar
+            if self.turno_jugador == -1:
+                _, mejor_mov = minimax(self, profundidad=3, maximizando=True)
+                if mejor_mov:
+                    origen, destino = mejor_mov
+                    resultado = self.hacer_movimiento(origen, destino)
+                    if resultado == "eliminar":
+                        self.eliminar_ficha_contraria(-1)

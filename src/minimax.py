@@ -1,80 +1,82 @@
+# minimax.py
+
 import copy
+from evaluacion import evaluar_tablero
 
-def minimax(tablero, profundidad, es_maximizador, alpha, beta):
-    if profundidad == 0 or evaluar_fin_juego(tablero):
-        return evaluar_tablero(tablero), None
-
-    if es_maximizador:
-        max_eval = float('-inf')
-        mejor_movimiento = None
-        for (origen, destino) in generar_movimientos(tablero, -1):  # IA
-            nuevo_tablero = simular_movimiento(tablero, origen, destino, -1)
-            evaluacion, _ = minimax(nuevo_tablero, profundidad - 1, False, alpha, beta)
-            if evaluacion > max_eval:
-                max_eval = evaluacion
-                mejor_movimiento = (origen, destino)
-            alpha = max(alpha, evaluacion)
-            if beta <= alpha:
-                break
-        return max_eval, mejor_movimiento
-
-    else:
-        min_eval = float('inf')
-        mejor_movimiento = None
-        for (origen, destino) in generar_movimientos(tablero, 1):  # Jugador
-            nuevo_tablero = simular_movimiento(tablero, origen, destino, 1)
-            evaluacion, _ = minimax(nuevo_tablero, profundidad - 1, True, alpha, beta)
-            if evaluacion < min_eval:
-                min_eval = evaluacion
-                mejor_movimiento = (origen, destino)
-            beta = min(beta, evaluacion)
-            if beta <= alpha:
-                break
-        return min_eval, mejor_movimiento
-
-
-# Heurística simple: número de fichas IA - jugador
-def evaluar_tablero(tablero):
-    return tablero.count(-1) - tablero.count(1)
-
-
-# Verifica si un jugador tiene 2 o menos fichas
-def evaluar_fin_juego(tablero):
-    return tablero.count(-1) <= 2 or tablero.count(1) <= 2
-
-
-# Define las conexiones del tablero (mismo que en logica_juego)
-conexiones = {
-    0: [1, 9], 1: [0, 2, 4], 2: [1, 14],
-    3: [4, 10], 4: [1, 3, 5, 7], 5: [4, 13],
-    6: [7, 11], 7: [4, 6, 8], 8: [7, 12],
-    9: [0, 10, 21], 10: [3, 9, 11, 18], 11: [6, 10, 15],
-    12: [8, 13, 17], 13: [5, 12, 14, 20], 14: [2, 13, 23],
-    15: [11, 16], 16: [15, 17, 19], 17: [12, 16],
-    18: [10, 19], 19: [16, 18, 20, 22], 20: [13, 19],
-    21: [9, 22], 22: [19, 21, 23], 23: [14, 22]
-}
-
-def generar_movimientos(tablero, jugador):
+def obtener_movimientos(juego, jugador):
+    """
+    Retorna una lista de movimientos válidos: tuplas (origen, destino)
+    Si es fase de colocación, destino será None.
+    """
     movimientos = []
-    # Verifica si el jugador está en modo "vuelo"
-    if tablero.count(jugador) == 3:
-        # Puede moverse a cualquier punto vacío
+
+    if juego.fase == "colocacion":
         for i in range(24):
-            if tablero[i] == jugador:
-                for j in range(24):
-                    if tablero[j] == 0:
-                        movimientos.append((i, j))
-    else:
+            if juego.tablero[i] == 0:
+                movimientos.append((i, None))  # Colocar ficha
+    elif juego.fase == "movimiento":
         for i in range(24):
-            if tablero[i] == jugador:
-                for j in conexiones[i]:
-                    if tablero[j] == 0:
-                        movimientos.append((i, j))
+            if juego.tablero[i] == jugador:
+                if juego._puede_volar(jugador):
+                    for j in range(24):
+                        if juego.tablero[j] == 0:
+                            movimientos.append((i, j))
+                else:
+                    for j in juego.movimientos_validos[i]:
+                        if juego.tablero[j] == 0:
+                            movimientos.append((i, j))
     return movimientos
 
-def simular_movimiento(tablero, origen, destino, jugador):
-    nuevo_tablero = tablero.copy()
-    nuevo_tablero[origen] = 0
-    nuevo_tablero[destino] = jugador
-    return nuevo_tablero
+def minimax(juego, profundidad, maximizando, alpha=float('-inf'), beta=float('inf')):
+    """
+    Implementación del algoritmo Minimax con poda alfa-beta.
+    Retorna una tupla (valor, mejor_movimiento)
+    """
+    if profundidad == 0 or juego.fin_juego:
+        return evaluar_tablero(juego.tablero, -1), None  # La IA es el jugador -1
+
+    jugador = -1 if maximizando else 1
+    posibles = obtener_movimientos(juego, jugador)
+
+    if not posibles:
+        return evaluar_tablero(juego.tablero, jugador), None
+
+    mejor_valor = float('-inf') if maximizando else float('inf')
+    mejor_movimiento = None
+
+    for movimiento in posibles:
+        copia = copy.deepcopy(juego)
+        origen, destino = movimiento
+        resultado = copia.hacer_movimiento(origen, destino,simulado=True)            
+       #Simulación de eliminación si se forma un molino
+        if resultado == "eliminar":
+            posibles_eliminaciones = [
+                i for i in range(24)
+                if copia.tablero[i] == -jugador and not copia._es_molino(i, -jugador)
+            ]
+            if not posibles_eliminaciones:
+                # Si todas son molinos, se puede eliminar cualquiera
+                posibles_eliminaciones = [
+                    i for i in range(24) if copia.tablero[i] == -jugador
+                ]
+            if posibles_eliminaciones:
+                copia.tablero[posibles_eliminaciones[0]] = 0
+                copia.fichas_en_tablero[-jugador] -= 1
+
+        valor, _ = minimax(copia, profundidad - 1, not maximizando, alpha, beta)
+
+        if maximizando:
+            if valor > mejor_valor:
+                mejor_valor = valor
+                mejor_movimiento = movimiento
+            alpha = max(alpha, mejor_valor)
+        else:
+            if valor < mejor_valor:
+                mejor_valor = valor
+                mejor_movimiento = movimiento
+            beta = min(beta, mejor_valor)
+
+        if beta <= alpha:
+            break  # Poda alfa-beta
+
+    return mejor_valor, mejor_movimiento
