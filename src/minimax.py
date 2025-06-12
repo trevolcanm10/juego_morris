@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 # minimax.py
-
 import copy
 from evaluacion import evaluar_tablero
 
@@ -82,4 +79,4 @@ def minimax(juego, profundidad, maximizando, alpha=float('-inf'), beta=float('in
             break  # Poda alfa-beta
 
     return mejor_valor, mejor_movimiento
->>>>>>> rm-denilson
+

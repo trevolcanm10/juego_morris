@@ -1,4 +1,5 @@
 import copy
+from minimax import minimax
 #Codifcación Denilson
 class MorrisGame:
     def __init__(self):
@@ -148,8 +149,6 @@ class MorrisGame:
 
     def _cambiar_turno(self, simulado=False):
         self.turno_jugador *= -1
-<<<<<<< HEAD
-=======
         # turno de la IA
         if self.turno_jugador == -1 and not self.fin_juego and not simulado:
             _, mejor_mov = minimax(self, profundidad=3, maximizando=True)
@@ -161,8 +160,6 @@ class MorrisGame:
                        
 
 
->>>>>>> rm-denilson
-
     def estado_actual(self):
         return {
             'tablero': self.tablero.copy(),
@@ -173,8 +170,6 @@ class MorrisGame:
             'fichas_en_tablero': self.fichas_en_tablero.copy(),
             'fin': self.fin_juego
         }
-<<<<<<< HEAD
-=======
 
 
     def simular_movimiento(juego_original, origen, destino):
@@ -234,4 +229,3 @@ class MorrisGame:
                     resultado = self.hacer_movimiento(origen, destino)
                     if resultado == "eliminar":
                         self.eliminar_ficha_contraria(-1)
->>>>>>> rm-denilson
