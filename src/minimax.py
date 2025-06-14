@@ -13,55 +13,53 @@ def obtener_movimientos(juego, jugador):
         for i in range(24):
             if juego.tablero[i] == 0:
                 movimientos.append((i, None))  # Colocar ficha
-    elif juego.fase == "movimiento":
+    else:
         for i in range(24):
             if juego.tablero[i] == jugador:
-                if juego._puede_volar(jugador):
+                # Vuelo
+                if juego.en_tablero[jugador] == 3:
                     for j in range(24):
                         if juego.tablero[j] == 0:
                             movimientos.append((i, j))
                 else:
-                    for j in juego.movimientos_validos[i]:
+                    for j in juego.movimientos_validos.get(i, []):
                         if juego.tablero[j] == 0:
                             movimientos.append((i, j))
     return movimientos
 
-def minimax(juego, profundidad, maximizando, alpha=float('-inf'), beta=float('inf')):
+def minimax(juego, profundidad: int, maximizando: bool,
+            alpha: float = float('-inf'), beta: float =float('inf')):
     """
     Implementación del algoritmo Minimax con poda alfa-beta.
     Retorna una tupla (valor, mejor_movimiento)
     """
     if profundidad == 0 or juego.fin_juego:
-        return evaluar_tablero(juego.tablero, -1), None  # La IA es el jugador -1
+        # Se evalua desde la perspectiva de IA (negras = -1)
+        return evaluar_tablero(juego.tablero, -1), None
 
     jugador = -1 if maximizando else 1
-    posibles = obtener_movimientos(juego, jugador)
-
-    if not posibles:
+    movimientos = obtener_movimientos(juego, jugador)
+    if not movimientos:
+        # No hay movimientos: evaluar estado
         return evaluar_tablero(juego.tablero, jugador), None
-
     mejor_valor = float('-inf') if maximizando else float('inf')
     mejor_movimiento = None
 
-    for movimiento in posibles:
-        copia = copy.deepcopy(juego)
+    for movimiento in movimientos:
         origen, destino = movimiento
-        resultado = copia.hacer_movimiento(origen, destino,simulado=True)            
-       #Simulación de eliminación si se forma un molino
+        copia = juego.copiar_estado()
+        resultado = copia.hacer_movimiento(origen, destino)            
+        #  Si se formó molino, simular eliminación para copia
         if resultado == "eliminar":
-            posibles_eliminaciones = [
-                i for i in range(24)
-                if copia.tablero[i] == -jugador and not copia._es_molino(i, -jugador)
-            ]
-            if not posibles_eliminaciones:
-                # Si todas son molinos, se puede eliminar cualquiera
-                posibles_eliminaciones = [
-                    i for i in range(24) if copia.tablero[i] == -jugador
-                ]
-            if posibles_eliminaciones:
-                copia.tablero[posibles_eliminaciones[0]] = 0
-                copia.fichas_en_tablero[-jugador] -= 1
+            # Elegir una eliminación “simple”: primera ficha enemiga no en molino o cualquiera si todas
+            rival = -jugador
+            posiciones = [i for i, v in enumerate(copia.tablero) if v == rival and not copia._es_molino(i, rival)]
+            if not posiciones:
+                posiciones = [i for i, v in enumerate(copia.tablero) if v == rival]
+            if posiciones:
+                copia.eliminar_ficha(posiciones[0], simulacion=True)
 
+        # Recursión
         valor, _ = minimax(copia, profundidad - 1, not maximizando, alpha, beta)
 
         if maximizando:
