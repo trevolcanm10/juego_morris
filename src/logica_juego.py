@@ -91,8 +91,9 @@ class MorrisGame:
             if not self._es_molino(punto, rival) or self._todas_en_molino(rival):
                 self.tablero[punto] = 0
                 self.fichas_en_tablero[rival] -= 1
-                if self.fichas_en_tablero[rival] <= 2 or not self._tiene_movimientos(rival):
+                if self.fase == "movimiento" and (self.fichas_en_tablero[rival] <= 2 or not self._tiene_movimientos(rival)):
                     self.fin_juego = True
+                    self.ganador = self.turno_jugador
                 return True
         return False
 
@@ -212,7 +213,9 @@ class MorrisGame:
             self.fichas_en_tablero[rival] -= 1
             print(f"Jugador {jugador} eliminó ficha del jugador {rival} en posición {ficha_a_eliminar}")
 
-            if self.fichas_en_tablero[rival] <= 2:
+
+
+            if self.fase == "movimiento" and self.fichas_en_tablero[rival] <= 2:
                 self.fin_juego = True
                 self.ganador = jugador
                 print(f"¡Jugador {jugador} gana! El jugador {rival} tiene solo 2 fichas.")

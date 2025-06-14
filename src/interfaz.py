@@ -81,6 +81,7 @@ class InterfazMorris:
                 sys.exit()
             #Evento clickMouse    
             elif evento.type == pygame.MOUSEBUTTONDOWN:
+                #Obtener la posición la posición del puntero
                 x, y = pygame.mouse.get_pos()
                 #Colocación de fichas o movimientos
                 for i, (px, py) in enumerate(self.puntos_ui):
@@ -100,6 +101,7 @@ class InterfazMorris:
                                     self.en_modo_eliminacion = True
                                     print("¡Molino formado! Selecciona una ficha del oponente para eliminar.")
                             else: #Fase de movimiento
+                                #Verificación si se colocaron 6 fichas cada jugador
                                 if self.juego.fichas_jugador > 0 or self.juego.fichas_ia > 0:
                                     print("Ambos jugadores deben colocar sus 6 fichas antes de mover.")
                                     return
