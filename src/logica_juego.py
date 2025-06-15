@@ -1,18 +1,28 @@
 import copy
-from minimax import minimax
+
 #Codifcación Denilson
 class MorrisGame:
     def __init__(self):
         # Representación del tablero: 24 puntos (0 a 23) conectados como en el Morris tradicional.
-        # Cada punto puede estar: 0 (vacío), 1 (jugador), -1 (IA).
+        # Cada punto puede estar: 0 (vacío), 1 (blancas), -1 (negras).
         self.tablero = [0] * 24
-        self.turno_jugador = 1  # 1: humano, -1: IA
+        self.turno = 1  # (Codificacion Wilson) 1: Fichas Blancas, -1: Fichas Negras // Así es más fácil para separar cuando el jugador humano sea las blancas o negras
         self.fase = "colocacion"  # "colocacion" o "movimiento"
-        self.fichas_jugador = 6  # Fichas restantes por colocar
-        self.fichas_ia = 6 
-        self.fichas_en_tablero = {1: 0, -1: 0}
+        self.por_colocar = {1:6, -1:6}
+        self.en_tablero = {1:0, -1:0}
         self.fin_juego = False
+        self.ganador = None
         self.movimientos_validos = self._generar_conexiones()  # Conexiones entre puntos
+        self.control = {1: 'humano', -1: 'IA'}
+
+    def set_control(self, control_blancas: str, control_negras: str):
+        assert control_blancas in ('humano', 'IA')
+        assert control_negras in ('humano', 'IA')
+        self.control[1] = control_blancas
+        self.control[-1] = control_negras
+
+    def es_turno_IA(self) -> bool:
+        return self.control.get(self.turno) == 'IA'
 
     def _generar_conexiones(self):
         conexiones = {
@@ -41,99 +51,143 @@ class MorrisGame:
         return conexiones_bidireccionales
 
     
-    def hacer_movimiento(self, origen, destino=None,simulado=False):
+    def hacer_movimiento(self, origen: int, destino: int = None) -> str or bool:
         if self.fin_juego:
             return False
 
-        jugador = self.turno_jugador
+        jugador = self.turno
 
         if self.fase == "colocacion":
-            if self.tablero[origen] == 0:
-                if (jugador == 1 and self.fichas_jugador == 0) or (jugador == -1 and self.fichas_ia == 0):
-                    return False  # No debe colocar más fichas
-                
-                self.tablero[origen] = jugador
-                if jugador == 1:
-                    self.fichas_jugador -= 1
-                else:
-                    self.fichas_ia -= 1
-                self.fichas_en_tablero[jugador] += 1
+            if origen < 0 or origen >= 24:
+                return False
+            if self.tablero[origen] != 0:
+                return False
+            if self.por_colocar[jugador] == 0:
+                return False  # No le quedan fichas por colocar
 
-                if self._verificar_molino(origen):
-                    return "eliminar"
-                
-                # Solo cambiar a fase de movimiento si ya no quedan fichas por colocar para ambos
-                if self.fichas_jugador == 0 and self.fichas_ia == 0:
-                    self.fase = "movimiento"
-                
-                if not simulado:
-                    self._cambiar_turno(simulado=simulado)
-                return True
+            # Coloca pieza
+            self.tablero[origen] = jugador
+            self.por_colocar[jugador] -= 1
+            self.en_tablero[jugador] += 1
 
-        elif self.fase == "movimiento":
-            if self.tablero[origen] == jugador:
-                if self._puede_volar(jugador) or destino in self.movimientos_validos[origen]:
-                    if self.tablero[destino] == 0:
-                        self.tablero[origen] = 0
-                        self.tablero[destino] = jugador
+            # Verificar molino
+            if self._verificar_molino(origen):
+                # se queda en mismo turno hasta eliminar ficha enemiga
+                return "eliminar"
 
-                        if self._verificar_molino(destino):
-                            return "eliminar"
-                        
-                        self._cambiar_turno(simulado=simulado)
-                        return True
-        return False
+            # Si ambos ya colocaron todas, pasar a fase de movimiento
+            if self.por_colocar[1] == 0 and self.por_colocar[-1] == 0:
+                self.fase = "movimiento"
+
+            # Cambiar turno
+            self._cambiar_turno()
+            return True
+
+        else:  # cuando es la fase de movimiento
+            # Movimiento normal: el origen debe tener ficha propia y destino vacío y válido
+            if origen is None or destino is None:
+                return False
+            if not (0 <= origen < 24 and 0 <= destino < 24):
+                return False
+            if self.tablero[origen] != jugador:
+                return False
+            if self.tablero[destino] != 0:
+                return False
+            # Verificar adyacencia o vuelo
+            if self.en_tablero[jugador] == 3:
+                # puede volar a cualquier casilla vacía
+                pass
+            else:
+                if destino not in self.movimientos_validos.get(origen, []):
+                    return False
+
+            # Ejecutar movimiento
+            self.tablero[origen] = 0
+            self.tablero[destino] = jugador
+
+            # Verificar molino
+            if self._verificar_molino(destino):
+                return "eliminar"
+
+            # Cambiar turno
+            self._cambiar_turno()
+            return True
 
     
-    def eliminar_ficha(self, punto):
-        rival = -self.turno_jugador
-        if self.tablero[punto] == rival:
-            if not self._es_molino(punto, rival) or self._todas_en_molino(rival):
-                self.tablero[punto] = 0
-                self.fichas_en_tablero[rival] -= 1
-                if self.fase == "movimiento" and (self.fichas_en_tablero[rival] <= 2 or not self._tiene_movimientos(rival)):
-                    self.fin_juego = True
-                    self.ganador = self.turno_jugador
+    def eliminar_ficha(self, punto: int, simulacion: bool = False) -> bool:
+        if self.fin_juego:
+            return False
+        rival = -self.turno
+        if punto < 0 or punto >= 24:
+            return False
+        if self.tablero[punto] != rival:
+            return False
+        # No puede eliminar ficha en molino a menos que todas estén en molino
+        if self._es_molino(punto, rival) and not self._todas_en_molino(rival):
+            return False
+
+        # Elimina ficha
+        self.tablero[punto] = 0
+        self.en_tablero[rival] -= 1
+
+        if not simulacion:
+            print(f"Ficha eliminada en el punto {punto}.")
+
+        # Solo se declara fin del juego si ya es la fase de movimiento
+        if self.fase == "movimiento":
+            # Si tras eliminar rival tiene <= 2 fichas o no tiene movimientos
+            if self.en_tablero[rival] <= 2 or not self._tiene_movimientos(rival):
+                self.fin_juego = True
+                self.ganador = self.turno
                 return True
-        return False
+        
+        if self.fase == "colocacion" and self.por_colocar[1] == 0 and self.por_colocar[-1] == 0:
+            self.fase = "movimiento"
+            if not simulacion:
+                print("Cambio de fase: colocación → movimiento")
 
-    def _puede_volar(self, jugador):
-        return self.fichas_en_tablero[jugador] == 3
+        # Cambiar turno tras eliminación
+        self._cambiar_turno()
+        return True
 
-    def _verificar_molino(self, punto):
-        jugador = self.turno_jugador
+    # Retorna True si en la posición 'punto' se formó un molino para el color en turno.
+    def _verificar_molino(self, punto: int) -> bool:
+        jugador = self.turno
         for molino in self._molinos_por_punto(punto):
             if all(self.tablero[pos] == jugador for pos in molino):
                 return True
         return False
 
-    def _es_molino(self, punto, jugador):
+    # Verifica si la ficha en 'punto' forma parte de un molino del jugador dado.
+    def _es_molino(self, punto: int, jugador: int) -> bool:
         for molino in self._molinos_por_punto(punto):
             if all(self.tablero[pos] == jugador for pos in molino):
                 return True
         return False
     
 
-    #Todas se encuentran en molino
-    def _todas_en_molino(self, jugador):
+    # Retorna True si todas las fichas de 'jugador' están en algún molino.
+    def _todas_en_molino(self, jugador: int) -> bool:
         return all(
             self._es_molino(i, jugador) 
             for i, val in enumerate(self.tablero) if val == jugador
         )
 
-    def _tiene_movimientos(self, jugador):
+    # Verifica si el jugador tiene movimientos válidos en la fase de movimiento
+    def _tiene_movimientos(self, jugador: int) -> bool:
         for i, val in enumerate(self.tablero):
             if val == jugador:
-                if self._puede_volar(jugador):
+                if self.en_tablero[jugador] == 3:
                     if any(self.tablero[d] == 0 for d in range(24)):
                         return True
-                for dest in self.movimientos_validos[i]:
-                    if self.tablero[dest] == 0:
-                        return True
+                else:
+                    for dest in self.movimientos_validos.get(i, []):
+                        if self.tablero[dest] == 0:
+                            return True
         return False
 
-    def _molinos_por_punto(self, punto):
-        """Devuelve las posibles combinaciones de molino en las que participa el punto."""
+    # Devuelve las posibles combinaciones de molino en las que participa el punto
+    def _molinos_por_punto(self, punto: int):
         molinos = [
             # Horizontales
             [0, 1, 2],     [3, 4, 5],     [6, 7, 8],
@@ -148,87 +202,28 @@ class MorrisGame:
 
         return [m for m in molinos if punto in m]
 
-    def _cambiar_turno(self, simulado=False):
-        self.turno_jugador *= -1
-        # turno de la IA
-        if self.turno_jugador == -1 and not self.fin_juego and not simulado:
-            _, mejor_mov = minimax(self, profundidad=3, maximizando=True)
-            if mejor_mov:
-                origen, destino = mejor_mov
-                resultado = self.hacer_movimiento(origen, destino)
-                if resultado == "eliminar":
-                    self.eliminar_ficha_contraria(-1)
+    # Cambia de turno
+    def _cambiar_turno(self):
+        self.turno *= -1
                        
-
-
-    def estado_actual(self):
-        return {
-            'tablero': self.tablero.copy(),
-            'turno': self.turno_jugador,
-            'fase': self.fase,
-            'fichas_jugador': self.fichas_jugador,
-            'fichas_ia': self.fichas_ia,
-            'fichas_en_tablero': self.fichas_en_tablero.copy(),
-            'fin': self.fin_juego
-        }
-
-
-    def simular_movimiento(juego_original, origen, destino):
-        copia = copy.deepcopy(juego_original)
-        copia.hacer_movimiento(origen, destino, simulado=True)
-        return copia
-
+    # Crea y retorna una copia del estado actual del juego
     def copiar_estado(self):
         nuevo = MorrisGame()
-        nuevo.tablero = self.tablero[:]  # Copia del tablero
-        nuevo.turno_jugador = self.turno_jugador
-        nuevo.fichas_jugador = self.fichas_jugador
-        nuevo.fichas_ia = self.fichas_ia
-        nuevo.fichas_en_tablero = self.fichas_en_tablero.copy()
+        nuevo.tablero = self.tablero[:]
+        nuevo.turno = self.turno
         nuevo.fase = self.fase
-        nuevo.movimientos_validos = {k: v[:] for k, v in self.movimientos_validos.items()}
+        nuevo.por_colocar = self.por_colocar.copy()
+        nuevo.en_tablero = self.en_tablero.copy()
         nuevo.fin_juego = self.fin_juego
+        nuevo.ganador = self.ganador
+        nuevo.movimientos_validos = {k: v[:] for k, v in self.movimientos_validos.items()}
+        nuevo.control = self.control.copy()
         return nuevo
 
-    def eliminar_ficha_contraria(self, jugador):
-        if self.fin_juego:
-            return
-
-        # Encuentra las posiciones del oponente
-        rival = -jugador
-        posiciones_contrarias = [i for i, val in enumerate(self.tablero) if val == rival]
-
-        # Intenta eliminar una que no esté en molino
-        ficha_a_eliminar = next(
-            (pos for pos in posiciones_contrarias if not self._es_molino(pos, rival)),
-            None
-        )
-
-        # Si todas están en molino, elimina cualquiera
-        if ficha_a_eliminar is None and posiciones_contrarias:
-            ficha_a_eliminar = posiciones_contrarias[0]
-
-        if ficha_a_eliminar is not None:
-            self.tablero[ficha_a_eliminar] = 0
-            self.fichas_en_tablero[rival] -= 1
-            print(f"Jugador {jugador} eliminó ficha del jugador {rival} en posición {ficha_a_eliminar}")
-
-
-
-            if self.fase == "movimiento" and self.fichas_en_tablero[rival] <= 2:
-                self.fin_juego = True
-                self.ganador = jugador
-                print(f"¡Jugador {jugador} gana! El jugador {rival} tiene solo 2 fichas.")
-                return
-        # Solo cambiar el turno si el juego no terminó
-        if not self.fin_juego:
-            self.turno_jugador *= -1
-
-            # Si el nuevo turno es de la IA, la IA debe jugar
-            if self.turno_jugador == -1:
-                _, mejor_mov = minimax(self, profundidad=3, maximizando=True)
-                if mejor_mov:
-                    origen, destino = mejor_mov
-                    resultado = self.hacer_movimiento(origen, destino)
-                    if resultado == "eliminar":
-                        self.eliminar_ficha_contraria(-1)
+    # Retorna una copia del juego luego del movimiento simulado
+    def simular_movimiento(self, origen: int, destino: int):
+        copia = self.copiar_estado()
+        # Para simulación, invocamos hacer_movimiento en copia: no importa que cambie turno en copia.
+        _ = copia.hacer_movimiento(origen, destino)
+        # Si devuelve "eliminar", la lógica de simulación de IA en Minimax deberá eliminar ficha manualmente
+        return copia
