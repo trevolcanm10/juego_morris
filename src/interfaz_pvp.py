@@ -95,17 +95,17 @@ class InterfazPVP:
         turno = self.juego.turno
         texto = f"Turno: {'Blancas (Jugador 1)' if turno==1 else 'Negras (Jugador 2)'}"
         surf = self.fuente_titulo.render(texto, True, (255,255,255)) # Texto blanco
-        self.pantalla.blit(surf, (400 - surf.get_width()//2, 20))
+        self.pantalla.blit(surf, (400 - surf.get_width()//2, 2))
         # Contador en fase colocación
         if self.juego.fase == "colocacion":
             # Blancas a la izquierda
             rest1 = self.juego.por_colocar[1]
-            surf1 = self.fuente_info.render(f"Por colocar: {rest1}", True, (255,255,255))
-            self.pantalla.blit(surf1, (50 - surf1.get_width()//2, 100))
+            surf1 = self.fuente_info.render(f"Por colocar (J1): {rest1}", True, (255,255,255))
+            self.pantalla.blit(surf1, (50, ALTO-40))
             # Negras a la derecha
             rest2 = self.juego.por_colocar[-1]
-            surf2 = self.fuente_info.render(f"Por colocar: {rest2}", True, (255,255,255))
-            self.pantalla.blit(surf2, (750 - surf2.get_width()//2, 100))
+            surf2 = self.fuente_info.render(f"Por colocar (J2): {rest2}", True, (255,255,255))
+            self.pantalla.blit(surf2, (ANCHO-200, ALTO-40))
         # Mensaje de eliminación
         if self.en_modo_eliminacion:
             aviso = self.fuente_info.render("¡Selecciona ficha a eliminar!", True, (255,100,100))
