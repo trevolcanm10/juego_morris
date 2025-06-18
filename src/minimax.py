@@ -28,27 +28,27 @@ def obtener_movimientos(juego, jugador):
     return movimientos
 
 def minimax(juego, profundidad: int, maximizando: bool,
-            alpha: float = float('-inf'), beta: float =float('inf')):
+            alpha: float = float('-inf'), beta: float =float('inf'), nivel:int = 0):
     """
     Implementación del algoritmo Minimax con poda alfa-beta.
     Retorna una tupla (valor, mejor_movimiento)
     """
     if profundidad == 0 or juego.fin_juego:
         # Se evalua desde la perspectiva de IA (negras = -1)
-        return evaluar_tablero(juego.tablero, -1), None
+        return evaluar_tablero(juego,-1), None
 
     jugador = -1 if maximizando else 1
     movimientos = obtener_movimientos(juego, jugador)
     if not movimientos:
         # No hay movimientos: evaluar estado
-        return evaluar_tablero(juego.tablero, jugador), None
-    mejor_valor = float('-inf') if maximizando else float('inf')
-    mejor_movimiento = None
-
+        return evaluar_tablero(juego, jugador), None
+    
+    evaluaciones=[]
     for movimiento in movimientos:
         origen, destino = movimiento
         copia = juego.copiar_estado()
-        resultado = copia.hacer_movimiento(origen, destino)            
+        resultado = copia.hacer_movimiento(origen, destino)
+
         #  Si se formó molino, simular eliminación para copia
         if resultado == "eliminar":
             # Elegir una eliminación “simple”: primera ficha enemiga no en molino o cualquiera si todas
@@ -58,23 +58,35 @@ def minimax(juego, profundidad: int, maximizando: bool,
                 posiciones = [i for i, v in enumerate(copia.tablero) if v == rival]
             if posiciones:
                 copia.eliminar_ficha(posiciones[0], simulacion=True)
+            if maximizando:
+                valor_bonus = 150
+            else:
+                valor_bonus = -150
 
         # Recursión
-        valor, _ = minimax(copia, profundidad - 1, not maximizando, alpha, beta)
-
+        valor, _ = minimax(copia, profundidad - 1, not maximizando, alpha, beta, nivel + 1)
+        if resultado == "eliminar":
+            valor += valor_bonus
+        evaluaciones.append((valor,movimiento))
+        
         if maximizando:
-            if valor > mejor_valor:
-                mejor_valor = valor
-                mejor_movimiento = movimiento
-            alpha = max(alpha, mejor_valor)
+            alpha = max(alpha, valor)
         else:
-            if valor < mejor_valor:
-                mejor_valor = valor
-                mejor_movimiento = movimiento
-            beta = min(beta, mejor_valor)
+            beta = min(beta, valor)
 
         if beta <= alpha:
             break  # Poda alfa-beta
-
+    
+    if nivel == 0:
+        evaluaciones.sort(reverse=maximizando, key=lambda x: x[0])
+        rol = "IA" if maximizando else "Jugador"
+        print(f"\nTop 4 movimientos para {rol} ({jugador}):")
+        for i, (val, mov) in enumerate(evaluaciones[:4]):
+            print(f"{i+1}. Movimiento: {mov}, Valor: {val}")
+    # Elegir mejor movimiento según si estamos maximizando o minimizando
+    mejor_valor, mejor_movimiento = (
+        max(evaluaciones, key=lambda x: x[0]) if maximizando else min(evaluaciones, key=lambda x: x[0])
+    )
+            
     return mejor_valor, mejor_movimiento
 

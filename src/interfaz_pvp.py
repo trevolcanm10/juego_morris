@@ -2,7 +2,7 @@ import pygame
 import sys
 import os
 from logica_juego import MorrisGame
-
+#interfaz_pvp.py
 class InterfazPVP:
     def __init__(self, juego: MorrisGame, pantalla=None):
         if pantalla is None:
@@ -100,12 +100,26 @@ class InterfazPVP:
         s.fill((0,0,0,180))
         self.pantalla.blit(s, (0,0))
         ganador = self.juego.ganador
+        #Mostrar mensaje final según el estado
+        if ganador == 0:
+            texto = "¡Empate!"
+        elif ganador == 1:
+            texto = "¡Blancas (Jugador 1) gana!"
+        elif ganador == -1:
+            texto = "¡Negras (Jugador 2) gana!"
+        else:
+            texto = "Fin del juego"
+        '''
         if ganador is None:
             # Inferir: quien hizo el último movimiento ganador es el color actual
             ganador = self.juego.turno
         texto = f"¡{'Blancas (Jugador 1)' if ganador==1 else 'Negras (Jugador 2)'} gana!"
+        '''
+
         surf = self.fuente_titulo.render(texto, True, (255,255,255))
         self.pantalla.blit(surf, (400 - surf.get_width()//2, 350))
+
+        #Botón para volver al menú
         boton = pygame.Rect(300, 420, 200, 50)
         pygame.draw.rect(self.pantalla, (200,200,200), boton)
         surf_b = self.fuente_info.render("Volver al menú", True, (0,0,0))

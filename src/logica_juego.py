@@ -14,6 +14,7 @@ class MorrisGame:
         self.ganador = None
         self.movimientos_validos = self._generar_conexiones()  # Conexiones entre puntos
         self.control = {1: 'humano', -1: 'IA'}
+        self.turnos_sin_eliminar = 0
 
     def set_control(self, control_blancas: str, control_negras: str):
         assert control_blancas in ('humano', 'IA')
@@ -108,7 +109,14 @@ class MorrisGame:
             # Verificar molino
             if self._verificar_molino(destino):
                 return "eliminar"
-
+            
+            ## Si no se eliminó ninguna ficha, cuenta como turno sin eliminar
+            self.turnos_sin_eliminar += 1
+            if self.turnos_sin_eliminar >= 50:
+                self.fin_juego = True
+                self.ganador = 0  # 0 indica empate
+                print("Empate: 50 turnos sin eliminar fichas.")
+                return True
             # Cambiar turno
             self._cambiar_turno()
             return True
@@ -129,6 +137,7 @@ class MorrisGame:
         # Elimina ficha
         self.tablero[punto] = 0
         self.en_tablero[rival] -= 1
+        self.turnos_sin_eliminar = 0
 
         if not simulacion:
             print(f"Ficha eliminada en el punto {punto}.")
