@@ -16,6 +16,17 @@ class MorrisGame:
         self.control = {1: 'humano', -1: 'IA'}
         self.turnos_sin_eliminar = 0
 
+    def establecer_turno_inicial(self, quien_inicia):
+        """Establece el primer turno según quien inicie."""
+        if quien_inicia == 'jugador':
+            self.turno = 1  # El jugador inicia (blancas)
+            self.control[1] = 'humano' # Aseguramos que el jugador controle las blancas
+            self.control[-1] = 'IA'  # La IA controlará las negras
+        elif quien_inicia == 'ia':
+            self.turno = -1  # La IA inicia (negras)
+            self.control[1] = 'IA'  # La IA controla las blancas
+            self.control[-1] = 'humano'  # El jugador controla las negras
+            
     def set_control(self, control_blancas: str, control_negras: str):
         assert control_blancas in ('humano', 'IA')
         assert control_negras in ('humano', 'IA')

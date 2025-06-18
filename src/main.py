@@ -11,12 +11,12 @@ def main():
     pantalla = pygame.display.set_mode((800, 800))
     pygame.display.set_caption("Morris - Grupo 9")
 
+    # Crear una instancia del juego antes de pasarla al menú
+    juego = MorrisGame()
     while True:
         # Mostrar menú
-        menu = Menu(pantalla)
+        menu = Menu(pantalla,juego)
         modo, config = menu.run()
-        # Nuevo juego
-        juego = MorrisGame()
         if modo == "PVP":
             interfaz = InterfazPVP(juego, pantalla=pantalla)
         elif modo == "PVE":
@@ -32,6 +32,5 @@ def main():
             continue
         interfaz.ejecutar()
         # Al volver de ejecutar (cuando se pulsa “Volver al menú”), reinicia bucle
-
 if __name__ == "__main__":
     main()

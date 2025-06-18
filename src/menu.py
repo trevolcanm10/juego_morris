@@ -1,10 +1,11 @@
 import pygame
 import sys
 from dificultad import Dificultad
-
+#menu.py
 class Menu:
-    def __init__(self, pantalla):
+    def __init__(self, pantalla,juego):
         self.pantalla = pantalla
+        self.juego = juego #Aquí inicializamos self.juego
         self.ancho, self.alto = pantalla.get_size()
         self.fuente = pygame.font.SysFont("Arial", 30)
         # Definir botones
@@ -33,6 +34,45 @@ class Menu:
                 rect.y + (rect.height - surf.get_height())//2
             ))
 
+    # Esta función permitirá al jugador elegir quién empieza la partida.
+    def elegir_quien_inicia(self):
+        """Permite que el jugador elija quién inicia la partida."""
+        self.pantalla.fill((200, 200, 200))  # Limpiar pantalla
+        #Definir las áreas para los clics
+        area_jugador = pygame.Rect(self.ancho // 2 - 150, self.alto // 2 - 50, 300, 50)  # Área para que el jugador elija
+        area_ia = pygame.Rect(self.ancho // 2 - 150, self.alto // 2 + 20, 300, 50)  # Área para que la IA elija
+
+        #Mensaje
+        mensaje = self.fuente.render("¿Quién inicia? (1: Jugador, 2: IA)", True, (0, 0, 0))
+        self.pantalla.blit(mensaje, (self.ancho // 2 - mensaje.get_width() // 2, self.alto // 2 - 100))
+         # Dibujar las opciones
+        pygame.draw.rect(self.pantalla, (100, 200, 100), area_jugador)
+        pygame.draw.rect(self.pantalla, (200, 100, 100), area_ia)
+
+        texto_jugador = self.fuente.render("Jugador", True, (0, 0, 0))
+        texto_ia = self.fuente.render("IA", True, (0, 0, 0))
+
+        self.pantalla.blit(texto_jugador, (area_jugador.x + (area_jugador.width - texto_jugador.get_width()) // 2,
+                                           area_jugador.y + (area_jugador.height - texto_jugador.get_height()) // 2))
+        self.pantalla.blit(texto_ia, (area_ia.x + (area_ia.width - texto_ia.get_width()) // 2,
+                                      area_ia.y + (area_ia.height - texto_ia.get_height()) // 2))
+                                      
+        pygame.display.flip()
+        
+        #Dibujar las opciones
+        seleccion = None
+        while seleccion is None:
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    pygame.quit(); sys.exit()
+                elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                    mx, my = pygame.mouse.get_pos()
+                    if area_jugador.collidepoint(mx, my):
+                        seleccion = 'jugador'
+                    elif area_ia.collidepoint(mx, my):
+                        seleccion = 'ia'
+        return seleccion
+
     def run(self):
         reloj = pygame.time.Clock()
         seleccion = None
@@ -52,6 +92,10 @@ class Menu:
                                 nivel = "regular"
                                 profundidad = Dificultad(nivel).obtener_profundidad()
                                 seleccion = ("PVE", {"nivel": profundidad})
+                                #Opción de elección quién inicia
+                                seleccion_quien_inicia = self.elegir_quien_inicia() #nueva funcion
+                                self.juego.establecer_turno_inicial(seleccion_quien_inicia) #ajustamos el turno
+                                return seleccion
                             else:
                                 print(f"Modo {clave} aún no implementado")
             self.dibujar()

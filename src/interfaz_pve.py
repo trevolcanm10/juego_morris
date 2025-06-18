@@ -92,9 +92,16 @@ class InterfazPVE:
         s = pygame.Surface(self.pantalla.get_size(), pygame.SRCALPHA)
         s.fill((0,0,0,180)); self.pantalla.blit(s,(0,0))
         ganador = self.juego.ganador
-        if ganador is None:
-            ganador = self.juego.turno
-        texto = f"¡{'Blancas (Tú)' if ganador==1 else 'Negras (IA)'} gana!"
+        #if ganador is None:
+            #ganador = self.juego.turno
+        if ganador == 0:
+            texto = "¡Empate!"
+        elif ganador == 1:
+            texto = "¡Blancas (Tú) gana!"
+        elif ganador == -1:
+            texto = "¡Negras (IA) gana!"
+        else:
+            texto = "Fin del juego"
         surf = self.fuente_titulo.render(texto, True, (255,255,255))
         self.pantalla.blit(surf, (400 - surf.get_width()//2, 350))
         boton = pygame.Rect(300,420,200,50)
