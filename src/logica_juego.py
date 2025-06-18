@@ -1,4 +1,5 @@
 import copy
+from minimax import minimax
 
 #Codifcación Denilson
 class MorrisGame:
@@ -227,3 +228,21 @@ class MorrisGame:
         _ = copia.hacer_movimiento(origen, destino)
         # Si devuelve "eliminar", la lógica de simulación de IA en Minimax deberá eliminar ficha manualmente
         return copia
+    
+    def obtener_mejor_movimiento(self):
+        """Llama a Minimax para que la IA elija el mejor movimiento según el nivel de dificultad."""
+        if self.es_turno_IA():
+            profundidad = self.obtener_dificultad()  # Obtiene la profundidad según el nivel de dificultad
+            maximizando = self.turno == -1  # Si es el turno de la IA (negras), maximiza
+            valor, mejor_movimiento = minimax(self, profundidad, maximizando)
+            return mejor_movimiento
+        return None
+
+    def obtener_dificultad(self):
+        """Devuelve la profundidad de búsqueda según el nivel de dificultad (fácil, regular, difícil)."""
+        if self.control[self.turno] == 'IA':
+            if self.turno == 1:
+                return 3  # Ejemplo para blanco
+            else:
+                return 3  # Ejemplo para negro
+        return 3  # Establecer un valor predeterminado para la dificultad
