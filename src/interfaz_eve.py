@@ -4,12 +4,14 @@ import os
 from logica_juego import MorrisGame
 from minimax import minimax
 
+ANCHO, ALTO = 800, 800
+
 class InterfazEVE:
     def __init__(self, juego: MorrisGame, pantalla=None,
                  nivel_blancas: int = 3, nivel_negras: int = 3, delay: float = 0.5):
         if pantalla is None:
             pygame.init()
-            self.pantalla = pygame.display.set_mode((800,800))
+            self.pantalla = pygame.display.set_mode((ANCHO,ALTO))
             pygame.display.set_caption("Morris EVE")
         else:
             self.pantalla = pantalla
@@ -78,14 +80,14 @@ class InterfazEVE:
         turno = self.juego.turno
         texto = f"Turno IA: {'Blancas' if turno==1 else 'Negras'}"
         surf = self.fuente_titulo.render(texto, True, (0,0,0))
-        self.pantalla.blit(surf, (400 - surf.get_width()//2, 20))
+        self.pantalla.blit(surf, (400 - surf.get_width()//2, 2))
         if self.juego.fase == "colocacion":
             rest1 = self.juego.por_colocar[1]
-            surf1 = self.fuente_info.render(f"Por colocar: {rest1}", True, (0,0,0))
-            self.pantalla.blit(surf1, (50 - surf1.get_width()//2, 100))
+            surf1 = self.fuente_info.render(f"Por colocar (IA-1): {rest1}", True, (0,0,0))
+            self.pantalla.blit(surf1, (50, ALTO-40))
             rest2 = self.juego.por_colocar[-1]
-            surf2 = self.fuente_info.render(f"Por colocar: {rest2}", True, (0,0,0))
-            self.pantalla.blit(surf2, (750 - surf2.get_width()//2, 100))
+            surf2 = self.fuente_info.render(f"Por colocar (IA-2): {rest2}", True, (0,0,0))
+            self.pantalla.blit(surf2, (ANCHO-200, ALTO-40))
         if self.en_modo_eliminacion:
             aviso = self.fuente_info.render("IA eligiendo eliminación...", True, (200,0,0))
             self.pantalla.blit(aviso, (400 - aviso.get_width()//2, 60))

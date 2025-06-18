@@ -84,15 +84,15 @@ class InterfazPVE:
         turno = self.juego.turno
         texto = f"Turno: {'Blancas (Tú)' if turno==1 else 'Negras (IA)'}"
         surf = self.fuente_titulo.render(texto, True, (255, 255, 255))  # Cambiado a blanco para mejor contraste
-        self.pantalla.blit(surf, (400 - surf.get_width()//2, 20))
+        self.pantalla.blit(surf, (400 - surf.get_width()//2, 2))
         
         if self.juego.fase == "colocacion":
             rest1 = self.juego.por_colocar[1]
-            surf1 = self.fuente_info.render(f"Por colocar: {rest1}", True, (255, 255, 255))
-            self.pantalla.blit(surf1, (50 - surf1.get_width()//2, 100))
+            surf1 = self.fuente_info.render(f"Por colocar (Tú): {rest1}", True, (255, 255, 255))
+            self.pantalla.blit(surf1, (50, ALTO-40))
             rest2 = self.juego.por_colocar[-1]
-            surf2 = self.fuente_info.render(f"Por colocar: {rest2}", True, (255, 255, 255))
-            self.pantalla.blit(surf2, (750 - surf2.get_width()//2, 100))
+            surf2 = self.fuente_info.render(f"Por colocar (IA): {rest2}", True, (255, 255, 255))
+            self.pantalla.blit(surf2, (ANCHO-200, ALTO-40))
         
         if self.en_modo_eliminacion:
             aviso = self.fuente_info.render("¡Selecciona ficha a eliminar!", True, (255, 100, 100))  # Rojo claro
