@@ -2,11 +2,21 @@ import pygame
 import sys
 import os
 
+ANCHO, ALTO = 800, 800  # Define las dimensiones de la ventana
+
+base = os.path.abspath(os.path.join(os.path.dirname(__file__), "assets", "sprites"))
+try:
+    TABLERO_IMG = pygame.image.load(os.path.join(base, "tableroo.png")).convert_alpha()
+    TABLERO_IMG = pygame.transform.scale(TABLERO_IMG, (ANCHO, ALTO))
+except FileNotFoundError:
+    print(f"Error: No se encontró {os.path.join(base, 'tableroo.png')}")
+    sys.exit()
+
 class InterfazMorris:
     def __init__(self, juego):
         pygame.init()
         self.juego = juego
-        self.pantalla = pygame.display.set_mode((800, 800))
+        self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption("Morris - Grupo 9")
         self.reloj = pygame.time.Clock()
         self.cargar_assets()
@@ -46,6 +56,21 @@ class InterfazMorris:
 
 
     def dibujar_tablero(self):
+        # Dibuja la imagen del tablero (fondo)
+        self.pantalla.blit(TABLERO_IMG, (0, 0))  # <-- Nueva línea
+        
+        # --- Conserva el resto del código (fichas y textos) --- #
+        # Dibujar puntos y fichas (esto se mantiene)
+        for i, (x, y) in enumerate(self.puntos_ui):
+            if self.juego.tablero[i] == 1:
+                self.pantalla.blit(self.ficha_blanca, (x-20, y-20))
+            elif self.juego.tablero[i] == -1:
+                self.pantalla.blit(self.ficha_negra, (x-20, y-20))
+        
+        # Mostrar turno actual (texto)
+        texto = self.fuente.render(f"Turno: {'Jugador' if self.juego.turno_jugador == 1 else 'IA'}", True, (0, 0, 0))
+        self.pantalla.blit(texto, (20, 20))
+        '''
         """Dibuja el tablero completo con líneas y puntos."""
         self.pantalla.fill((245, 245, 220))  # Fondo beige
         
@@ -71,7 +96,9 @@ class InterfazMorris:
         # Mostrar turno actual
         texto = self.fuente.render(f"Turno: {'Jugador' if self.juego.turno_jugador == 1 else 'IA'}", True, (0, 0, 0))
         self.pantalla.blit(texto, (20, 20))
-
+        '''
+        
+        
     def manejar_eventos(self):
         #Registra eventos como clicks,teclas,cerrar ventana
         for evento in pygame.event.get():
