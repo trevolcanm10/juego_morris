@@ -7,6 +7,9 @@ ANCHO, ALTO = 800, 800
 
 class InterfazPVP:
     def __init__(self, juego: MorrisGame, pantalla=None):
+        self.ficha_seleccionada = None
+        self.color_sombra_valida = (50, 255, 50, 180)  # Verde semitransparente
+        self.color_sombra_invalida = (255, 50, 50, 180)  # Rojo semitransparente
         if pantalla is None:
             pygame.init()
             self.pantalla = pygame.display.set_mode((ANCHO,ALTO))
@@ -31,6 +34,13 @@ class InterfazPVP:
         self.puntos_ui = self._generar_puntos_ui()
         self.fuente_titulo = pygame.font.SysFont("Arial", 28, bold=True)
         self.fuente_info = pygame.font.SysFont("Arial", 20)
+
+    def _dibujar_sombra(self, posicion, color):
+        """Dibuja un círculo semitransparente en la posición indicada."""
+        x, y = self.puntos_ui[posicion]
+        sombra = pygame.Surface((80, 80), pygame.SRCALPHA)  # Tamaño igual al de las fichas
+        pygame.draw.circle(sombra, color, (34, 34), 34)  # Radio 34
+        self.pantalla.blit(sombra, (x - 34, y - 34))  # Dibuja centrado
 
     def _cargar_assets(self):
         base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "sprites"))
@@ -67,6 +77,15 @@ class InterfazPVP:
         
     def dibujar_tablero(self):
         self.pantalla.blit(self.tablero_img, (0, 0))
+        # Dibuja sombra si hay una ficha seleccionada
+        if self.ficha_seleccionada is not None:
+            puede_mover = self.juego._puede_mover(self.ficha_seleccionada)
+            if puede_mover and self.juego.tablero[self.ficha_seleccionada] == self.juego.turno:
+                color = self.color_sombra_valida
+            else:
+                color = self.color_sombra_invalida
+            self._dibujar_sombra(self.ficha_seleccionada, color)
+
         radio_ficha = 30
         for i, (x, y) in enumerate(self.puntos_ui):
             val = self.juego.tablero[i]
@@ -135,6 +154,7 @@ class InterfazPVP:
                             self.juego.eliminar_ficha(i)
                             self.en_modo_eliminacion = False
                             self.origen_seleccionado = None
+                            self.ficha_seleccionada = None
                         else:
                             if self.juego.fase == "colocacion":
                                 res = self.juego.hacer_movimiento(i)
@@ -144,11 +164,13 @@ class InterfazPVP:
                                 if self.origen_seleccionado is None:
                                     if self.juego.tablero[i] == self.juego.turno:
                                         self.origen_seleccionado = i
+                                        self.ficha_seleccionada = i
                                 else:
                                     res = self.juego.hacer_movimiento(self.origen_seleccionado, i)
                                     if res == "eliminar":
                                         self.en_modo_eliminacion = True
                                     self.origen_seleccionado = None
+                                    self.ficha_seleccionada = None
                         break
 
     def ejecutar(self):
