@@ -110,8 +110,8 @@ class InterfazPVE:
             self.pantalla.blit(surf2, (ANCHO-200, ALTO-40))
         
         if self.en_modo_eliminacion:
-            aviso = self.fuente_info.render("¡Selecciona ficha a eliminar!", True, (255, 100, 100))
-            self.pantalla.blit(aviso, (400 - aviso.get_width()//2, 60))
+            aviso = self.fuente_info.render("¡Selecciona ficha a eliminar!", True, (0, 0, 139))
+            self.pantalla.blit(aviso, (400 - aviso.get_width()//2, 85))
 
     def dibujar_fin_partida(self):
         s = pygame.Surface(self.pantalla.get_size(), pygame.SRCALPHA)
@@ -185,7 +185,7 @@ class InterfazPVE:
                 self.origen_seleccionado = None
                 self.dibujar_tablero()
                 aviso = self.fuente_info.render("IA pensando...", True, (0, 0, 0))
-                self.pantalla.blit(aviso, (400 - aviso.get_width()//2, 60))
+                self.pantalla.blit(aviso, (410 - aviso.get_width()//2, 380))
                 pygame.display.flip()
                 pygame.time.delay(300)
                 

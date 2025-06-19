@@ -47,7 +47,7 @@ class Menu:
         pygame.draw.rect(self.pantalla, (200, 100, 100), boton_ia)
         
         texto_jugador = self.fuente.render("Jugador (Blancas)", True, (0, 0, 0))
-        texto_ia = self.fuente.render("IA (Negras)", True, (0, 0, 0))
+        texto_ia = self.fuente.render("IA (Blancas)", True, (0, 0, 0))
         
         self.pantalla.blit(texto_jugador, (boton_jugador.x + (boton_jugador.width - texto_jugador.get_width())//2,
                                            boton_jugador.y + (boton_jugador.height - texto_jugador.get_height())//2))
