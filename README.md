@@ -64,7 +64,7 @@ Si prefieres usar **conda** para gestionar tus entornos y dependencias, puedes c
     ```bash
     conda install pygame numpy
     pip install pygame numpy
-###Ejecución
+**Ejecución**
 
   Para ejecutar el juego, simplemente corre el siguiente comando:
      ```bash
@@ -74,7 +74,9 @@ Si prefieres usar **conda** para gestionar tus entornos y dependencias, puedes c
     1.PVP: Jugador vs Jugador (dos jugadores en el mismo dispositivo).
     2.PVE: Jugador vs IA, con la opción de seleccionar el nivel de dificultad y quién inicia la partida.
 
- ###Modo de Juego
+ **Modo de Juego**
+
+ 
   -Fase de colocación: Los jugadores colocan sus fichas en el tablero. En esta fase, pueden colocar fichas en cualquier punto vacío.
   
   -Fase de movimiento: Después de que ambos jugadores hayan colocado todas sus piezas, pueden moverlas por el tablero.
@@ -83,7 +85,7 @@ Si prefieres usar **conda** para gestionar tus entornos y dependencias, puedes c
   
   -Final del juego: El juego termina cuando un jugador reduce al oponente a dos fichas o lo bloquea completamente, impidiendo que realice movimientos.
 
-###Evaluación del Tablero
+***Evaluación del Tablero**
 
   -La evaluación del tablero es una parte crucial del algoritmo Minimax utilizado para la IA. La función evaluar_tablero() analiza el estado actual del tablero y asigna una puntuación para ayudar a la IA a decidir qué movimiento realizar. Los factores evaluados son:
   
