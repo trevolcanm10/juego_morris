@@ -1,9 +1,9 @@
 class Dificultad:
     NIVELES = {
-        "fácil": 1,
-        "regular": 2,
-        "difícil": 3,
-        "extremo": 4
+        "fácil": 2,
+        "regular": 3,
+        "difícil": 4,
+        "extremo": 5
     }
     
     def __init__(self, nivel: str = "regular"):
