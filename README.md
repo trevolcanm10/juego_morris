@@ -85,7 +85,7 @@ Si prefieres usar **conda** para gestionar tus entornos y dependencias, puedes c
   
   -Final del juego: El juego termina cuando un jugador reduce al oponente a dos fichas o lo bloquea completamente, impidiendo que realice movimientos.
 
-***Evaluación del Tablero**
+**Evaluación del Tablero**
 
   -La evaluación del tablero es una parte crucial del algoritmo Minimax utilizado para la IA. La función evaluar_tablero() analiza el estado actual del tablero y asigna una puntuación para ayudar a la IA a decidir qué movimiento realizar. Los factores evaluados son:
   
