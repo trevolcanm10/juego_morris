@@ -1,3 +1,4 @@
+# Lista de todas las combinaciones de posiciones que forman un molino
 MOLINOS = [
     (0, 1, 2), (3, 4, 5), (6, 7, 8),
     (9,10,11), (12,13,14), (15,16,17),
@@ -7,6 +8,7 @@ MOLINOS = [
     (5,13,20), (2,14,23)
 ]
 
+# Posiciones centrales estratégicas del tablero
 POSICIONES_CENTRALES = {1, 4, 7, 10, 13, 16, 19, 22}
 
 def evaluar_tablero(juego, jugador):
@@ -14,68 +16,74 @@ def evaluar_tablero(juego, jugador):
     enemigo = -jugador
     valor = 0
 
-    # Diferencia de fichas
-    valor += tablero.count(jugador) * 10
-    valor -= tablero.count(enemigo) * 15
+    # === H1: Diferencia de fichas en el tablero ===
+    valor += tablero.count(jugador) * 15
+    valor -= tablero.count(enemigo) * 12  # Penalizar más que antes
 
-    # Molinos completos
+    # === H2: Molinos concretados ===
     for trio in MOLINOS:
         if all(tablero[i] == jugador for i in trio):
-            valor += 600
+            valor += 500  # Mucho mayor para que priorice formar molinos
         elif all(tablero[i] == enemigo for i in trio):
-            valor -= 150
+            valor -= 100
 
-    # Amenazas de molino
+    # === H3: Amenaza inmediata de molino ===
     for trio in MOLINOS:
         valores = [tablero[i] for i in trio]
         if valores.count(jugador) == 2 and valores.count(0) == 1:
-            valor += 200
+            valor += 150  # Incentiva cerrar molino
         elif valores.count(enemigo) == 2 and valores.count(0) == 1:
-            valor -= 100
+            valor -= 75
 
-    # Movilidad
-    valor += contar_movimientos(juego, jugador) * 1
-    valor -= contar_movimientos(juego, enemigo) * 3
+    # === H4: Posibilidad futura de molino (presión ofensiva) ===
+        if valores.count(jugador) == 1 and valores.count(0) == 2:
+            valor += 20
 
-    # Posiciones centrales
+    # === H5: Movilidad ===
+    valor += contar_movimientos(juego, jugador) * 2
+    valor -= contar_movimientos(juego, enemigo) * 2
+
+    # === H6: Control de posiciones centrales ===
     for i in POSICIONES_CENTRALES:
         if tablero[i] == jugador:
-            valor += 3
+            valor += 5
         elif tablero[i] == enemigo:
-            valor -= 3
+            valor -= 5
 
-    # Fichas bloqueadas
-    valor -= contar_bloqueadas(juego, jugador) * 3
-    valor += contar_bloqueadas(juego, enemigo) * 15
+    # === H7: Fichas bloqueadas ===
+    valor -= contar_bloqueadas(juego, jugador) * 5
+    valor += contar_bloqueadas(juego, enemigo) * 10
 
-    # Fichas eliminadas
+    # === H8: Eliminar fichas ===
     fichas_eliminadas = 9 - juego.en_tablero[enemigo]
-    valor += fichas_eliminadas * 50
+    valor += fichas_eliminadas * 50  # Considera fichas ya eliminadas
 
-    # Bonus por reducir al enemigo a 3 fichas
+    # === H9: Vuelo (modo con 3 fichas) ===
     if juego.en_tablero[jugador] == 3:
-        valor += 100
-    if juego.en_tablero[enemigo] <= 3:
-        valor += (4 - juego.en_tablero[enemigo]) * 300
-        if juego.en_tablero[enemigo] == 3:
-            valor += 200
-    # Victoria
+        valor += 50  # Incentiva aprovecharlo (antes era penalización)
+    if juego.en_tablero[enemigo] == 3:
+        valor += 100  # Ventaja, pero menor a victoria total
+
+    # === H10: Victoria técnica ===
     if juego.en_tablero[enemigo] <= 2:
-        valor += 15000
-    elif not juego._tiene_movimientos(enemigo):
-        valor += 12000  # Victoria por bloqueo
+        valor += 10000  # Prioriza final
+
     return valor
 
+
+# Cuenta la cantidad de movimientos posibles para un jugador
 def contar_movimientos(juego, jugador):
     movimientos = 0
     for i in range(24):
         if juego.tablero[i] == jugador:
+            # Si está en modo vuelo, puede ir a cualquier lugar vacío
             if juego.en_tablero[jugador] == 3:
                 movimientos += sum(1 for j in range(24) if juego.tablero[j] == 0)
             else:
                 movimientos += sum(1 for j in juego.movimientos_validos.get(i, []) if juego.tablero[j] == 0)
     return movimientos
 
+# Cuenta las fichas propias que no pueden moverse
 def contar_bloqueadas(juego, jugador):
     bloqueadas = 0
     for i in range(24):
