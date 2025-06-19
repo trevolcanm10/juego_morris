@@ -59,7 +59,7 @@ Si prefieres usar **conda** para gestionar tus entornos y dependencias, puedes c
 2. Activa el entorno:
    ```bash
    conda activate morris_game
-3.Instala las dependencias utilizando conda (y pip cuando no estén disponibles en el repositorio de conda):
+3. Instala las dependencias utilizando conda (y pip cuando no estén disponibles en el repositorio de conda):
 
     ```bash
     conda install pygame numpy
