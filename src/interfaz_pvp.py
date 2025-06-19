@@ -14,29 +14,7 @@ class InterfazPVP:
         else:
             self.pantalla = pantalla
         
-        self.juego = juego
-        # Configurar control: ambas blancas y negras humano
-        self.juego.set_control('humano', 'humano')
-        self.reloj = pygame.time.Clock()
-        self.origen_seleccionado = None
-        self.en_modo_eliminacion = False
-        # Cargar assets de fichas
-        self._cargar_assets()
-        self.puntos_ui = self._generar_puntos_ui()
-        self.fuente_titulo = pygame.font.SysFont("Arial", 28, bold=True)
-        self.fuente_info = pygame.font.SysFont("Arial", 20)
-
-    def _cargar_assets(self):
         base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "sprites"))
-
-        '''
-        try:
-            self.ficha_blanca = pygame.image.load(os.path.join(base, "DamaBlanca.png"))
-            self.ficha_negra  = pygame.image.load(os.path.join(base, "DamaNegra.png"))
-            self.ficha_blanca = pygame.transform.scale(self.ficha_blanca, (40,40))
-            self.ficha_negra  = pygame.transform.scale(self.ficha_negra,  (40,40))
-        '''
-        # Cargar imagen del tablero
         try:
             self.tablero_img = pygame.image.load(os.path.join(base, "tableroo.png")).convert_alpha()
             self.tablero_img = pygame.transform.scale(self.tablero_img, (ANCHO, ALTO))
@@ -44,7 +22,18 @@ class InterfazPVP:
             print(f"Error: No se encontró {os.path.join(base, 'tableroo.png')}")
             sys.exit()
         
-        # Cargar imágenes de fichas
+        self.juego = juego
+        self.juego.set_control('humano', 'humano')
+        self.reloj = pygame.time.Clock()
+        self.origen_seleccionado = None
+        self.en_modo_eliminacion = False
+        self._cargar_assets()
+        self.puntos_ui = self._generar_puntos_ui()
+        self.fuente_titulo = pygame.font.SysFont("Arial", 28, bold=True)
+        self.fuente_info = pygame.font.SysFont("Arial", 20)
+
+    def _cargar_assets(self):
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "sprites"))
         nuevo_tamaño = 60
         try:
             self.ficha_blanca = pygame.image.load(os.path.join(base, "DamaBlanca.png"))
@@ -55,9 +44,8 @@ class InterfazPVP:
             print(f"Advertencia: no se cargaron imágenes de fichas: {e}")
             self.ficha_blanca = pygame.Surface((nuevo_tamaño,nuevo_tamaño),pygame.SRCALPHA)
             pygame.draw.circle(self.ficha_blanca, (255,255,255), (nuevo_tamaño//2,nuevo_tamaño//2), nuevo_tamaño//2)
-            self.ficha_negra  = pygame.Surface((40,40),pygame.SRCALPHA)
+            self.ficha_negra = pygame.Surface((nuevo_tamaño,nuevo_tamaño),pygame.SRCALPHA)
             pygame.draw.circle(self.ficha_negra, (0,0,0), (nuevo_tamaño//2,nuevo_tamaño//2), nuevo_tamaño//2)
-        
             
     def _generar_puntos_ui(self):
         escala = 107.5; offset_x = 90; offset_y = 75
@@ -71,19 +59,14 @@ class InterfazPVP:
             18:(1,5),19:(3,5),20:(5,5),
             21:(0,6),22:(3,6),23:(6,6)
         }
-
-        puntos=[]
+        puntos = []
         for i in range(24):
             x_log, y_log = coords[i]
-            x = x_log*escala + offset_x
-            y = y_log*escala + offset_y
-            puntos.append((x,y))
+            puntos.append((x_log*escala + offset_x, y_log*escala + offset_y))
         return puntos
         
     def dibujar_tablero(self):
-        # Dibujar imagen de fondo
         self.pantalla.blit(self.tablero_img, (0, 0))
-        # Dibujar fichas
         radio_ficha = 30
         for i, (x, y) in enumerate(self.puntos_ui):
             val = self.juego.tablero[i]
@@ -91,22 +74,20 @@ class InterfazPVP:
                 self.pantalla.blit(self.ficha_blanca, (x-radio_ficha, y-radio_ficha))
             elif val == -1:
                 self.pantalla.blit(self.ficha_negra, (x-radio_ficha, y-radio_ficha))
-        # Texto turno arriba-centro
+        
         turno = self.juego.turno
         texto = f"Turno: {'Blancas (Jugador 1)' if turno==1 else 'Negras (Jugador 2)'}"
-        surf = self.fuente_titulo.render(texto, True, (255,255,255)) # Texto blanco
+        surf = self.fuente_titulo.render(texto, True, (255,255,255))
         self.pantalla.blit(surf, (400 - surf.get_width()//2, 2))
-        # Contador en fase colocación
+        
         if self.juego.fase == "colocacion":
-            # Blancas a la izquierda
             rest1 = self.juego.por_colocar[1]
             surf1 = self.fuente_info.render(f"Por colocar (J1): {rest1}", True, (255,255,255))
             self.pantalla.blit(surf1, (50, ALTO-40))
-            # Negras a la derecha
             rest2 = self.juego.por_colocar[-1]
             surf2 = self.fuente_info.render(f"Por colocar (J2): {rest2}", True, (255,255,255))
             self.pantalla.blit(surf2, (ANCHO-200, ALTO-40))
-        # Mensaje de eliminación
+        
         if self.en_modo_eliminacion:
             aviso = self.fuente_info.render("¡Selecciona ficha a eliminar!", True, (255,100,100))
             self.pantalla.blit(aviso, (400 - aviso.get_width()//2, 60))
@@ -116,18 +97,19 @@ class InterfazPVP:
         s.fill((0,0,0,180))
         self.pantalla.blit(s, (0,0))
         ganador = self.juego.ganador or self.juego.turno
-        texto = f"¡{'Blancas (Jugador 1)' if ganador==1 else 'Negras (Jugador 2)'} gana!"
-        surf = self.fuente_titulo.render(texto, True, (255, 215, 0))  # Texto dorado
         
-        '''
-        if ganador is None:
-            # Inferir: quien hizo el último movimiento ganador es el color actual
-            ganador = self.juego.turno
-        texto = f"¡{'Blancas (Jugador 1)' if ganador==1 else 'Negras (Jugador 2)'} gana!"
-        surf = self.fuente_titulo.render(texto, True, (255,255,255))
-        '''
-
+        if ganador == 0:
+            texto = "¡Empate!"
+        elif ganador == 1:
+            texto = "¡Blancas (Jugador 1) gana!"
+        elif ganador == -1:
+            texto = "¡Negras (Jugador 2) gana!"
+        else:
+            texto = "Fin del juego"
+            
+        surf = self.fuente_titulo.render(texto, True, (255, 215, 0))
         self.pantalla.blit(surf, (400 - surf.get_width()//2, 350))
+        
         boton = pygame.Rect(300, 420, 200, 50)
         pygame.draw.rect(self.pantalla, (200,200,200), boton)
         surf_b = self.fuente_info.render("Volver al menú", True, (0,0,0))
@@ -150,54 +132,36 @@ class InterfazPVP:
                 for i,(px,py) in enumerate(self.puntos_ui):
                     if (px-radio_interaccion <= x <= px+radio_interaccion) and (py-radio_interaccion <= y <= py+radio_interaccion):
                         if self.en_modo_eliminacion:
-                            if self.juego.eliminar_ficha(i):
-                                print("Ficha eliminada correctamente.")
-                                self.en_modo_eliminacion = False
-                            else:
-                                print("No puedes eliminar esa ficha.")
+                            self.juego.eliminar_ficha(i)
+                            self.en_modo_eliminacion = False
                             self.origen_seleccionado = None
                         else:
                             if self.juego.fase == "colocacion":
                                 res = self.juego.hacer_movimiento(i)
                                 if res == "eliminar":
                                     self.en_modo_eliminacion = True
-                                    print("¡Molino! Selecciona ficha a eliminar.")
-                                elif res:
-                                    print(f"Ficha colocada en {i}.")
-                                else:
-                                    print("Movimiento inválido.")
                             else:
-                                # fase movimiento
                                 if self.origen_seleccionado is None:
                                     if self.juego.tablero[i] == self.juego.turno:
                                         self.origen_seleccionado = i
-                                        print(f"Origen seleccionado: {i}")
-                                    else:
-                                        print("Selecciona una de tus fichas.")
                                 else:
                                     res = self.juego.hacer_movimiento(self.origen_seleccionado, i)
                                     if res == "eliminar":
                                         self.en_modo_eliminacion = True
-                                        print("¡Molino! Selecciona ficha a eliminar.")
-                                    elif res:
-                                        print(f"Movido {self.origen_seleccionado} → {i}")
-                                    else:
-                                        print("Movimiento inválido.")
                                     self.origen_seleccionado = None
                         break
 
     def ejecutar(self):
         boton_volver = None
         while True:
-            # Eventos
             self.manejar_eventos()
-            # Dibujar tablero o fin
             self.dibujar_tablero()
             if self.juego.fin_juego:
                 boton_volver = self.dibujar_fin_partida()
+            
             pygame.display.flip()
             self.reloj.tick(30)
-            # Si fin, manejar botón volver
+            
             if self.juego.fin_juego and boton_volver:
                 for evento in pygame.event.get(pygame.MOUSEBUTTONDOWN):
                     if evento.button == 1 and boton_volver.collidepoint(evento.pos):

@@ -1,13 +1,12 @@
 import copy
 from minimax import minimax
 
-#Codifcación Denilson
 class MorrisGame:
     def __init__(self):
         # Representación del tablero: 24 puntos (0 a 23) conectados como en el Morris tradicional.
         # Cada punto puede estar: 0 (vacío), 1 (blancas), -1 (negras).
         self.tablero = [0] * 24
-        self.turno = 1  # (Codificacion Wilson) 1: Fichas Blancas, -1: Fichas Negras // Así es más fácil para separar cuando el jugador humano sea las blancas o negras
+        self.turno = 1  # 1: Fichas Blancas, -1: Fichas Negras // Así es más fácil para separar cuando el jugador humano sea las blancas o negras
         self.fase = "colocacion"  # "colocacion" o "movimiento"
         self.por_colocar = {1:6, -1:6}
         self.en_tablero = {1:0, -1:0}
@@ -15,12 +14,21 @@ class MorrisGame:
         self.ganador = None
         self.movimientos_validos = self._generar_conexiones()  # Conexiones entre puntos
         self.control = {1: 'humano', -1: 'IA'}
+        self.turnos_sin_eliminar = 0
 
     def set_control(self, control_blancas: str, control_negras: str):
         assert control_blancas in ('humano', 'IA')
         assert control_negras in ('humano', 'IA')
         self.control[1] = control_blancas
         self.control[-1] = control_negras
+
+    def establecer_turno_inicial(self, quien_inicia):
+        """Establece quién juega primero y con qué color."""
+        self.turno = 1
+        if quien_inicia == 'jugador':
+            self.set_control('humano', 'IA')  # Jugador con blancas
+        elif quien_inicia == 'ia':
+            self.set_control('IA', 'humano')  # IA con blancas
 
     def es_turno_IA(self) -> bool:
         return self.control.get(self.turno) == 'IA'
@@ -109,6 +117,13 @@ class MorrisGame:
             # Verificar molino
             if self._verificar_molino(destino):
                 return "eliminar"
+
+            # Si no se elimina ninguna ficha cuenta como turno sin eliminar
+            self.turnos_sin_eliminar += 1
+            if self.turnos_sin_eliminar >= 50:
+                self.fin_juego = True
+                self.ganador = 0
+                return True
 
             # Cambiar turno
             self._cambiar_turno()
@@ -228,21 +243,3 @@ class MorrisGame:
         _ = copia.hacer_movimiento(origen, destino)
         # Si devuelve "eliminar", la lógica de simulación de IA en Minimax deberá eliminar ficha manualmente
         return copia
-    
-    def obtener_mejor_movimiento(self):
-        """Llama a Minimax para que la IA elija el mejor movimiento según el nivel de dificultad."""
-        if self.es_turno_IA():
-            profundidad = self.obtener_dificultad()  # Obtiene la profundidad según el nivel de dificultad
-            maximizando = self.turno == -1  # Si es el turno de la IA (negras), maximiza
-            valor, mejor_movimiento = minimax(self, profundidad, maximizando)
-            return mejor_movimiento
-        return None
-
-    def obtener_dificultad(self):
-        """Devuelve la profundidad de búsqueda según el nivel de dificultad (fácil, regular, difícil)."""
-        if self.control[self.turno] == 'IA':
-            if self.turno == 1:
-                return 3  # Ejemplo para blanco
-            else:
-                return 3  # Ejemplo para negro
-        return 3  # Establecer un valor predeterminado para la dificultad
