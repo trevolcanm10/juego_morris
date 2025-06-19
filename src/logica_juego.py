@@ -243,3 +243,20 @@ class MorrisGame:
         _ = copia.hacer_movimiento(origen, destino)
         # Si devuelve "eliminar", la lógica de simulación de IA en Minimax deberá eliminar ficha manualmente
         return copia
+
+    def _puede_mover(self, posicion):
+        """Verifica si la ficha en la posición dada puede moverse."""
+        if self.tablero[posicion] == 0:  # Casilla vacía
+            return False
+        
+        jugador = self.tablero[posicion]
+        
+        # Si el jugador tiene solo 3 fichas, puede volar (mover a cualquier casilla vacía)
+        if self.en_tablero[jugador] == 3:
+            return any(casilla == 0 for casilla in self.tablero)
+        
+        # Para más de 3 fichas, verifica adyacentes vacías
+        return any(
+            self.tablero[vecino] == 0 
+            for vecino in self.movimientos_validos.get(posicion, [])
+        )
