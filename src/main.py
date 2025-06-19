@@ -20,9 +20,7 @@ def main():
             nivel = config.get("nivel", 3)
             quien_inicia = config.get("quien_inicia", 'jugador')
             interfaz = InterfazPVE(juego, pantalla=pantalla, nivel=nivel, quien_inicia=quien_inicia)
-        elif modo == "EVE":
-            # Implementación futura
-            continue
+
         else:
             continue
         interfaz.ejecutar()

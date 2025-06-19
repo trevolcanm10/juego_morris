@@ -10,7 +10,6 @@ class Menu:
         self.botones = {
             "PVP": pygame.Rect(self.ancho//2 - 150, self.alto//2 - 80, 300, 50),
             "PVE": pygame.Rect(self.ancho//2 - 150, self.alto//2, 300, 50),
-            "EVE": pygame.Rect(self.ancho//2 - 150, self.alto//2 + 80, 300, 50),
         }
         self.dificultades = Dificultad.niveles_disponibles()
         self.seleccion_dificultad = None
@@ -96,8 +95,6 @@ class Menu:
                                 quien_inicia = self.elegir_quien_inicia()
                                 prof = Dificultad(dificultad_seleccionada).obtener_profundidad()
                                 seleccion = ("PVE", {"nivel": prof, "quien_inicia": quien_inicia})
-                            elif clave == "EVE":
-                                seleccion = ("EVE", {})
             self.dibujar()
             pygame.display.flip()
             reloj.tick(30)

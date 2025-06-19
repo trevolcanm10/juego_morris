@@ -15,55 +15,55 @@ def evaluar_tablero(juego, jugador):
     valor = 0
 
     # Diferencia de fichas
-    valor += tablero.count(jugador) * 15
-    valor -= tablero.count(enemigo) * 12
+    valor += tablero.count(jugador) * 10
+    valor -= tablero.count(enemigo) * 15
 
     # Molinos completos
     for trio in MOLINOS:
         if all(tablero[i] == jugador for i in trio):
-            valor += 500
+            valor += 600
         elif all(tablero[i] == enemigo for i in trio):
-            valor -= 100
+            valor -= 150
 
     # Amenazas de molino
     for trio in MOLINOS:
         valores = [tablero[i] for i in trio]
         if valores.count(jugador) == 2 and valores.count(0) == 1:
-            valor += 150
+            valor += 200
         elif valores.count(enemigo) == 2 and valores.count(0) == 1:
-            valor -= 75
-        if valores.count(jugador) == 1 and valores.count(0) == 2:
-            valor += 20
+            valor -= 100
 
     # Movilidad
-    valor += contar_movimientos(juego, jugador) * 2
-    valor -= contar_movimientos(juego, enemigo) * 2
+    valor += contar_movimientos(juego, jugador) * 1
+    valor -= contar_movimientos(juego, enemigo) * 3
 
     # Posiciones centrales
     for i in POSICIONES_CENTRALES:
         if tablero[i] == jugador:
-            valor += 5
+            valor += 3
         elif tablero[i] == enemigo:
-            valor -= 5
+            valor -= 3
 
     # Fichas bloqueadas
-    valor -= contar_bloqueadas(juego, jugador) * 5
-    valor += contar_bloqueadas(juego, enemigo) * 10
+    valor -= contar_bloqueadas(juego, jugador) * 3
+    valor += contar_bloqueadas(juego, enemigo) * 15
 
     # Fichas eliminadas
     fichas_eliminadas = 9 - juego.en_tablero[enemigo]
     valor += fichas_eliminadas * 50
 
-    # Modo vuelo
+    # Bonus por reducir al enemigo a 3 fichas
     if juego.en_tablero[jugador] == 3:
-        valor += 50
-    if juego.en_tablero[enemigo] == 3:
         valor += 100
-
+    if juego.en_tablero[enemigo] <= 3:
+        valor += (4 - juego.en_tablero[enemigo]) * 300
+        if juego.en_tablero[enemigo] == 3:
+            valor += 200
     # Victoria
     if juego.en_tablero[enemigo] <= 2:
-        valor += 10000
-
+        valor += 15000
+    elif not juego._tiene_movimientos(enemigo):
+        valor += 12000  # Victoria por bloqueo
     return valor
 
 def contar_movimientos(juego, jugador):
