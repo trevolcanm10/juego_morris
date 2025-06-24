@@ -1,5 +1,6 @@
 # minimax.py
 import copy
+from logica_juego import MorrisGame  # Importa MorrisGame directamente
 from evaluacion import evaluar_tablero
 
 def obtener_movimientos(juego, jugador):
