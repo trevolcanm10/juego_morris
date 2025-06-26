@@ -194,13 +194,26 @@ class InterfazPVE:
                     origen, destino = mov
                     res = self.juego.hacer_movimiento(origen, destino)
                     if res == "eliminar":
-                        rival = -self.juego.turno
-                        posiciones = [i for i, v in enumerate(self.juego.tablero)
-                                      if v == rival and not self.juego._es_molino(i, rival)]
-                        if not posiciones:
-                            posiciones = [i for i, v in enumerate(self.juego.tablero) if v == rival]
-                        if posiciones:
-                            self.juego.eliminar_ficha(posiciones[0])
+                        from minimax import minimax_eliminacion
+                        
+                        # Mostrar que la IA está evaluando eliminación
+                        self.dibujar_tablero()
+                        aviso = self.fuente_info.render("IA eligiendo eliminación...", True, (0, 0, 0))
+                        self.pantalla.blit(aviso, (410 - aviso.get_width()//2, 400))
+                        pygame.display.flip()
+                        pygame.time.delay(500)
+                        
+                        # Usar minimax para decidir eliminación estratégica
+                        mejor_eliminacion = minimax_eliminacion(self.juego, self.juego.turno)
+                        
+                        if mejor_eliminacion is not None:
+                            self.juego.eliminar_ficha(mejor_eliminacion)
+                        else:
+                            # Fallback al método anterior si falla
+                            rival = -self.juego.turno
+                            posiciones = self.juego.obtener_fichas_eliminables(rival)
+                            if posiciones:
+                                self.juego.eliminar_ficha(posiciones[0])
 
             self.dibujar_tablero()
             if self.juego.fin_juego:

@@ -1,5 +1,4 @@
 import copy
-from minimax import minimax
 
 class MorrisGame:
     def __init__(self):
@@ -260,3 +259,36 @@ class MorrisGame:
             self.tablero[vecino] == 0 
             for vecino in self.movimientos_validos.get(posicion, [])
         )
+
+    def _verificar_molino_manual(self, punto: int, jugador: int) -> bool:
+        """Verifica si el jugador especificado forma un molino en el punto dado"""
+        for molino in self._molinos_por_punto(punto):
+            if all(self.tablero[pos] == jugador for pos in molino):
+                return True
+        return False
+    
+    def obtener_fichas_eliminables(self, jugador):
+        """Retorna las fichas del jugador que pueden ser eliminadas, priorizando las que no están en molino"""
+        fichas_no_molino = []
+        fichas_en_molino = []
+        
+        for i in range(24):
+            if self.tablero[i] == jugador:
+                if self._es_molino(i, jugador):
+                    fichas_en_molino.append(i)
+                else:
+                    fichas_no_molino.append(i)
+        
+        # Si hay fichas fuera de molino, solo esas pueden eliminarse
+        if fichas_no_molino:
+            return fichas_no_molino
+        else:
+            # Si todas están en molino, pueden eliminarse todas
+            return fichas_en_molino
+
+    def simular_eliminacion(self, posicion, jugador_elimina):
+        """Simula la eliminación de una ficha y retorna una copia del juego"""
+        copia = self.copiar_estado()
+        if copia.eliminar_ficha(posicion, simulacion=True):
+            return copia
+        return None
